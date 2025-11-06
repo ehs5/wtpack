@@ -1,0 +1,46 @@
+{
+  "name": "wtpack",
+  "version": "1.0.0",
+  "description": "What the Pack? wtpack is a CLI tool that enhances `npm install` by showing you which packages were installed, updated, or removed. It clearly highlights version changes for each package.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "wtpack": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "npm",
+    "npm install",
+    "npm i",
+    "npm add",
+    "package",
+    "package manager",
+    "wtpack",
+    "tpack install",
+    "what the pack"
+  ],
+  "author": "Espen Steen",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ehs5/wtpack"
+  },
+  "bugs": {
+    "url": "https://github.com/ehs5/wtpack/issues"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.10.0",
+    "@types/text-table": "^0.2.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "text-table": "^0.2.0"
+  }
+}
