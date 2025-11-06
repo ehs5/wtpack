@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import chalk from "chalk";
 import { spawnSync } from "node:child_process";
 import fs from "fs";
