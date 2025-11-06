@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "What the Pack? wtpack is a CLI tool that enhances `npm install` by showing you which packages were installed, updated, or removed. It clearly highlights version changes for each package.",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "main": "dist/index.js",
   "bin": {
     "wtpack": "./dist/index.js"
