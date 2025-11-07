@@ -35,8 +35,11 @@ function readPackages(isBeforeInstall: boolean): {
 function npmInstall(npmArgs: string[]): void {
   console.log(chalk.bold.white("npm install " + npmArgs.join(" ")));
 
+  // Figure out which command to use open npm. Windows must use npm.cmd instead of npm.
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+
   // Run npm install, followed by all arguments passed to wtpack.
-  const result = spawnSync("npm", ["install", ...npmArgs], {
+  const result = spawnSync(npmCommand, ["install", ...npmArgs], {
     stdio: "inherit",
     encoding: "utf-8",
   });
