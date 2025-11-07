@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import chalk from "chalk";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "fs";
 
 /** A package and its state. When updated, it contains before and after versions. */
@@ -32,26 +32,27 @@ function readPackages(isBeforeInstall: boolean): {
 }
 
 /** Runs npm install. Outputs lines directly to the console */
-function npmInstall(npmArgs: string[]): void {
+async function npmInstall(npmArgs: string[]): Promise<void> {
   console.log(chalk.bold.white("npm install " + npmArgs.join(" ")));
 
-  // Figure out which command to use open npm. Windows must use npm.cmd instead of npm.
-  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  // Handle Windows by using cmd.exe. Or else it shows [DEP0190] DeprecationWarning warnings with shell: true
+  const isWin = process.platform === "win32";
+  const command = isWin ? "cmd.exe" : "npm";
+  const args = isWin
+    ? ["/c", "npm.cmd", "install", ...npmArgs]
+    : ["install", ...npmArgs];
 
   // Run npm install, followed by all arguments passed to wtpack.
-  const result = spawnSync(npmCommand, ["install", ...npmArgs], {
-    stdio: "inherit",
-    encoding: "utf-8",
-  });
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      stdio: "inherit",
+    });
 
-  if (result.status !== 0) {
-    console.error(
-      chalk.bgRed.white.bold(" ERR "),
-      chalk.red("npm install failed\n"),
-      chalk.gray(result.stderr?.toString().trim())
-    );
-    process.exit(1);
-  }
+    child.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`npm install exited with code ${code}`));
+    });
+  });
 }
 
 /** Prints the wtpack header */
@@ -341,7 +342,7 @@ function parseArgs(): { npmArgs: string[]; wtpackFlags: string[] } {
   return { npmArgs, wtpackFlags };
 }
 
-function main() {
+async function main() {
   const { npmArgs, wtpackFlags } = parseArgs();
   const flagShow: boolean = wtpackFlags.includes("show");
 
@@ -350,7 +351,7 @@ function main() {
   const before = readPackages(true);
   if (flagShow) showPackages(before, true);
 
-  npmInstall(npmArgs);
+  await npmInstall(npmArgs);
 
   const after = readPackages(false);
   if (flagShow) showPackages(after, false);

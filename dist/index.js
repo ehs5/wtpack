@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import chalk from "chalk";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "fs";
 /** Reads package-lock.json and returns categorized top-level dependencies */
 function readPackages(isBeforeInstall) {
@@ -17,19 +17,26 @@ function readPackages(isBeforeInstall) {
     return { deps, devDeps };
 }
 /** Runs npm install. Outputs lines directly to the console */
-function npmInstall(npmArgs) {
+async function npmInstall(npmArgs) {
     console.log(chalk.bold.white("npm install " + npmArgs.join(" ")));
-    // Figure out which command to use open npm. Windows must use npm.cmd instead of npm.
-    const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+    const isWin = process.platform === "win32";
+    const command = isWin ? "cmd.exe" : "npm";
+    const args = isWin
+        ? ["/c", "npm.cmd", "install", ...npmArgs]
+        : ["install", ...npmArgs];
     // Run npm install, followed by all arguments passed to wtpack.
-    const result = spawnSync(npmCommand, ["install", ...npmArgs], {
-        stdio: "inherit",
-        encoding: "utf-8",
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, args, {
+            stdio: "inherit",
+            shell: false,
+        });
+        child.on("close", (code) => {
+            if (code === 0)
+                resolve();
+            else
+                reject(new Error(`npm install exited with code ${code}`));
+        });
     });
-    if (result.status !== 0) {
-        console.error(chalk.bgRed.white.bold(" ERR "), chalk.red("npm install failed\n"), chalk.gray(result.stderr?.toString().trim()));
-        process.exit(1);
-    }
 }
 /** Prints the wtpack header */
 function showHeader() {
@@ -221,14 +228,14 @@ function parseArgs() {
     }
     return { npmArgs, wtpackFlags };
 }
-function main() {
+async function main() {
     const { npmArgs, wtpackFlags } = parseArgs();
     const flagShow = wtpackFlags.includes("show");
     showHeader();
     const before = readPackages(true);
     if (flagShow)
         showPackages(before, true);
-    npmInstall(npmArgs);
+    await npmInstall(npmArgs);
     const after = readPackages(false);
     if (flagShow)
         showPackages(after, false);
